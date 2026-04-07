@@ -1,151 +1,110 @@
-Here is your README in a simple, clean format without emojis or complex formatting:
-
-```markdown
 # SQL Server Junior DBA Portfolio Project
 ## Norman Mathe | BCom Information Systems | University of Fort Hare
 
-A comprehensive, production-ready SQL Server DBA toolkit demonstrating all 9 core competencies required for a Junior Database Administrator role. Built around Microsoft SQL Server 2016+ using T-SQL, DMVs, SQL Agent, SSIS, and Always On.
+This is my SQL Server DBA toolkit that shows what I can do as a Junior Database Administrator. I built all these scripts using T-SQL, DMVs, SQL Agent, SSIS, and Always On for SQL Server 2016 and above.
 
-## Technologies Used
+## Technologies I Used
 
-- SQL Server 2016+ - Core RDBMS platform
-- T-SQL - All scripting and automation
-- SQL Server DMVs - Performance and health monitoring
-- SQL Server Agent - Job scheduling
-- SSIS (SSISDB) - ETL pipeline management
-- Always On AG - High availability and DR
-- Extended Events - Deadlock capture
-- DBCC Commands - Integrity checks
+- SQL Server 2016 and above
+- T-SQL for all my scripting
+- SQL Server DMVs for monitoring
+- SQL Server Agent for scheduling jobs
+- SSIS and SSISDB for ETL
+- Always On Availability Groups for high availability
+- Extended Events for deadlock capture
+- DBCC commands for database integrity
 
 ---
 
-## Competency Coverage
+## What I Can Do
 
 ### 1. Performance Tuning
 File: 01_performance_tuning/
 
-- Identifies missing indexes ranked by impact measure (seeks x cost x impact)
-- Auto-generates CREATE INDEX statements ready for review
-- Flags unused indexes consuming write overhead with removal candidates
-- Analyses fragmentation per index with REORGANIZE vs REBUILD recommendations
-- Surfaces top CPU-expensive queries with execution plans via sys.dm_exec_query_stats
+I wrote scripts that find missing indexes and rank them by how much they would help. I also generate the actual CREATE INDEX statements you can run. I find unused indexes that are wasting space and slowing down writes. I check index fragmentation and tell you whether to reorganize or rebuild. I also find the top 10 queries using the most CPU and show you their execution plans.
 
-Key Skills Demonstrated: DMV analysis, index strategy, query plan inspection
+Key Skills: DMVs, index analysis, query plans
 
 ---
 
 ### 2. Backup and Recovery
 File: 02_backup_recovery/01_backup_strategy.sql
 
-- usp_FullBackup - Full backup with CHECKSUM, compression, and RESTORE VERIFYONLY
-- usp_DifferentialBackup - Scheduled differential backup SP
-- usp_LogBackup - Transaction log backup with recovery model guard
-- Documented Point-In-Time Recovery (PITR) procedure with step-by-step comments
-- 3-2-1 strategy SQL Agent job definitions (Full daily / Diff 6h / Log 15min)
-- Backup health check showing overdue databases with hours since last backup
+I wrote a full backup procedure that does compression, checksums, and verification. I have a differential backup procedure and a log backup procedure that checks if the database is in FULL recovery mode first. I documented a point in time recovery example showing step by step how to restore. I included SQL Agent job definitions for a 3-2-1 backup strategy. I also have a backup health check query that shows which databases are overdue for backup.
 
-Key Skills Demonstrated: PITR, backup verification, Agent scheduling, 3-2-1 strategy
+Key Skills: Point in time recovery, backup verification, SQL Agent, 3-2-1 strategy
 
 ---
 
 ### 3. Security Management
 File: 03_security_management/01_security_management.sql
 
-- Three-tier RBAC: db_readonly_user, db_dataentry_user, db_reporting_user
-- usp_CreateDBUser - Parameterised SP to provision users with least privilege
-- Row-Level Security (RLS) predicate function with SECURITY POLICY template
-- Sysadmin audit query - flags all logins in sysadmin role
-- Password policy audit - logins without expiry or complexity checking
-- TDE status check across all user databases
-- Security hardening: SA account disabled check, xp_cmdshell / Ole Automation status
+I set up three database roles: read only, data entry, and reporting. I wrote a stored procedure that creates logins and users with least privilege. I built a row level security function that filters data based on who is logged in. I have audit queries that show who is in the sysadmin role and which logins dont have password policies enforced. I check which databases have TDE enabled and which dont. I also check if SA is disabled and if dangerous features like xp_cmdshell are turned off.
 
-Key Skills Demonstrated: RBAC, RLS, TDE awareness, security auditing, POPIA alignment
+Key Skills: RBAC, RLS, TDE, security auditing
 
 ---
 
 ### 4. Capacity Planning
 File: 04_capacity_planning/01_capacity_planning.sql
 
-- Database file size breakdown (data vs log, used vs free)
-- Table-level size report with row counts via usp_TableSizeReport
-- Growth history mining from msdb.backupset
-- Disk free space monitoring with status indicators (Red/Yellow/Green)
-- Auto-growth event tracking with percent vs MB growth flagging
-- usp_CapacityForecast - projects storage needs N months forward using growth rate
+I have queries that show database sizes broken down by data files and log files, and how much free space is inside each. I wrote a table size report that shows row counts and used space. I pull growth history from the msdb backup tables. I check disk space and show which drives are low. I track auto growth settings and flag percent growth which can cause many VLFs. I also wrote a capacity forecast procedure that projects database growth for the next 6 months.
 
-Key Skills Demonstrated: Trend analysis, forecasting, storage planning, proactive monitoring
+Key Skills: Trend analysis, forecasting, storage planning
 
 ---
 
 ### 5. Database Health Monitoring
 File: 05_health_monitoring/01_health_monitoring.sql
 
-- CPU utilisation from Ring Buffer (last 15 samples)
-- Memory - buffer pool, dirty pages, memory utilisation percentage
-- Wait statistics - top 15 waits with automated diagnosis text
-- Blocking chain - hierarchical tree view of blocked sessions
-- I/O latency per file with 100ms threshold alerting
-- Error log parser - last 24h events categorised by severity
+I monitor CPU usage from the ring buffer. I check memory usage including buffer pool and dirty pages. I show the top 15 wait statistics with diagnosis text explaining what each wait means. I display blocking chains in a tree view so you can see who is blocking who. I check I/O latency per file and flag anything over 100 milliseconds. I also parse the SQL Server error log for the last 24 hours and show errors and warnings.
 
-Key Skills Demonstrated: DMV expertise, proactive monitoring, incident detection
+Key Skills: DMVs, proactive monitoring, incident detection
 
 ---
 
 ### 6. Upgrades and Patch Management
 File: 07_troubleshooting/01_troubleshooting_toolkit.sql
 
-- SERVERPROPERTY version/CU/SP inventory
-- Pre-patch safety checklist: active jobs, user connections, AG sync state
-- Patch-readiness gate - blocks on unhealthy AG or running jobs
+I have a query that shows the SQL Server version, service pack, and cumulative update level. I built a pre patch checklist that shows active jobs, user connections, and AG sync state. This helps you know if the server is safe to patch.
 
 ---
 
 ### 7. Troubleshooting and Support
 File: 07_troubleshooting/01_troubleshooting_toolkit.sql
 
-- Active sessions dashboard with elapsed time, waits, logical reads
-- Deadlock XML extraction from system_health extended event
-- usp_IntegrityCheck - DBCC CHECKDB wrapper with repair mode options
-- usp_KillSession - safe session terminator with system SPID guard and elapsed threshold
+I have an active sessions dashboard that shows how long queries have been running and what they are waiting on. I extract deadlock XML from the system health extended event. I wrote a DBCC CHECKDB wrapper that can run integrity checks with repair options. I also have a safe kill session procedure that wont let you kill system processes and has a time threshold.
 
-Key Skills Demonstrated: Incident response, deadlock analysis, corruption detection
+Key Skills: Incident response, deadlock analysis, corruption detection
 
 ---
 
 ### 8. High Availability and Disaster Recovery
 File: 08_high_availability/01_always_on_setup_monitor.sql
 
-- Full Always On AG configuration script (Primary + Secondary replica join)
-- AG health dashboard: role, sync mode, connection state, sync health
-- RPO/RTO estimation from log send queue and redo queue sizes
-- usp_AGManualFailover - guided failover procedure with planned vs forced options
-- Pre-conditions: recovery model validation, endpoint creation reminders
+I wrote the full Always On configuration script for primary and secondary replicas. I have an AG health dashboard showing role, sync mode, and health status. I estimate RPO from log send queue size and RTO from redo queue size. I built a manual failover procedure that gives you the exact command to run for planned or forced failover.
 
-Key Skills Demonstrated: HA architecture, RPO/RTO understanding, failover procedures
+Key Skills: Always On, RPO and RTO, failover procedures
 
 ---
 
-### 9. SSIS / ETL Management
+### 9. SSIS and ETL Management
 File: 09_ssis_etl/01_ssis_etl_framework.sql
 
-- ETL Control Database - Jobs metadata, Execution Log, Error Log tables
-- usp_ETL_StartRun / usp_ETL_EndRun / usp_ETL_LogError - run lifecycle SPs
-- Watermark-based incremental load with MERGE (upsert) pattern
-- SSIS Catalog execution history with status decoding
-- Failed package message extraction from catalog.operation_messages
+I created an ETL control database with tables for job metadata, execution logs, and error logs. I wrote stored procedures to start a run, end a run successfully, and log failures. I implemented a watermark pattern for incremental loads using MERGE. I also have queries that show recent SSIS package executions and extract error messages from failed packages.
 
-Key Skills Demonstrated: ETL design patterns, SSIS monitoring, incremental load, audit logging
+Key Skills: ETL design, SSIS monitoring, incremental load, audit logging
 
 ---
 
-## Getting Started
+## How to Set This Up
 
-### Prerequisites
-- SQL Server 2016+ Developer Edition (free) or Express
-- SQL Server Management Studio (SSMS) 18+
+What you need:
+- SQL Server 2016 or above (Developer Edition is free)
+- SQL Server Management Studio 18 or above
 - AdventureWorks2019 sample database
 
-### Setup
+Steps:
 
 1. Restore AdventureWorks2019:
 RESTORE DATABASE [AdventureWorks2019]
@@ -153,32 +112,29 @@ FROM DISK = 'C:\Temp\AdventureWorks2019.bak'
 WITH MOVE 'AdventureWorks2019' TO 'C:\Data\AdventureWorks2019.mdf',
      MOVE 'AdventureWorks2019_log' TO 'C:\Logs\AdventureWorks2019_log.ldf';
 
-2. Run scripts in order per module. Each script is self-contained and safe to run on Developer Edition.
+2. Run the scripts in each module. Each script works on its own.
 
-### Recommended Execution Order
-1. 03_security_management - set up users and roles first
-2. 01_performance_tuning - analyse and optimise
-3. 02_backup_recovery - establish backup schedule
-4. 05_health_monitoring - deploy monitoring queries
-5. 04_capacity_planning - run after backup history builds
-6. 09_ssis_etl - create ETL_Control database
-7. 08_high_availability - requires 2-node WSFC lab
-8. 07_troubleshooting - on-demand toolkit
+Best order to run:
+1. Security management first to create users and roles
+2. Performance tuning to analyse and fix indexes
+3. Backup recovery to set up backups
+4. Health monitoring to deploy monitoring
+5. Capacity planning after backups have run
+6. SSIS ETL to create the ETL control database
+7. High availability if you have a two node cluster
+8. Troubleshooting toolkit for when things go wrong
 
 ---
 
-## Sample Results
+## Sample Output From My Scripts
 
-### Missing Index Report Output
-
+Missing Index Report:
 Table: SalesOrderHeader
-ImprovementMeasure: 847,291
 UserSeeks: 12,483
 AvgImpact: 94.2%
-CreateIndexStatement: CREATE INDEX IX_SalesO...
+CreateIndexStatement: CREATE INDEX IX_SalesOrderHeader...
 
-### Backup Health Check Output
-
+Backup Health Check:
 Database: AdventureWorks2019
 LastFullBackup: 2024-01-15 02:00:00
 HoursSinceFullBackup: 6
@@ -186,28 +142,22 @@ BackupStatus: OK
 
 Database: Northwind
 LastFullBackup: NULL
-HoursSinceFullBackup: NULL
 BackupStatus: NEVER BACKED UP
 
 ---
 
-## Author
+## About Me
 
 Norman Mathe
 BCom Information Systems - University of Fort Hare (2024)
 Durban, KwaZulu-Natal, South Africa
-Targeting: Junior DBA | SQL Developer | Data Engineering roles
 
-Academic Highlights:
+I am looking for Junior DBA or SQL Developer roles.
+
+My marks:
 - SQL: 100%
 - Databases: 91% (Distinction)
-- Big Data Analytics Certificate - ORT SA (SI4088)
+- Big Data Analytics Certificate from ORT SA (SI4088)
 
 ---
 
-## License
-
-MIT License - free to use, fork, and adapt for learning purposes.
-```
-
-This version is clean, easy to read, and professional without any emojis, special characters, or complex formatting.
