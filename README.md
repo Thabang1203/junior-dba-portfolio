@@ -1,11 +1,11 @@
 # SQL Server Junior DBA Portfolio Project
 ## Norman Mathe | BCom Information Systems | University of Fort Hare
 
-This is my SQL Server DBA toolkit that shows what I can do as a Junior Database Administrator. I built all these scripts using T-SQL, DMVs, SQL Agent, SSIS, and Always On for SQL Server 2016 and above.
+This is my SQL Server DBA toolkit that shows what I can do as a Junior Database Administrator. I built all these scripts using T-SQL, DMVs, SQL Agent, SSIS, and Always On for SQL Server 2016.
 
 ## Technologies I Used
 
-- SQL Server 2016 and above
+- SQL Server 2016
 - T-SQL for all my scripting
 - SQL Server DMVs for monitoring
 - SQL Server Agent for scheduling jobs
