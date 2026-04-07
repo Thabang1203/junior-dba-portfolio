@@ -1,18 +1,9 @@
--- ============================================================
--- Script: 01_ssis_etl_framework.sql
--- Author: Norman Mathe | Junior DBA Portfolio
--- Purpose: ETL framework - staging, audit logging, error
---          handling, and SSIS support stored procedures
--- Environment: SQL Server 2016+ with SSIS catalog (SSISDB)
--- ============================================================
-
 USE master;
 GO
 
--- ============================================================
 -- 1. ETL CONTROL DATABASE SETUP
--- ============================================================
--- Create dedicated ETL control database
+
+-- Create ETL control database
 IF DB_ID('ETL_Control') IS NULL
     CREATE DATABASE ETL_Control;
 GO
@@ -20,9 +11,7 @@ GO
 USE ETL_Control;
 GO
 
--- -------------------------------------------------------
--- 1a. ETL Job Metadata Table
--- -------------------------------------------------------
+-- ETL Job Metadata Table
 CREATE TABLE IF NOT EXISTS dbo.ETL_Jobs (
     JobID           INT IDENTITY(1,1) PRIMARY KEY,
     JobName         NVARCHAR(256) NOT NULL,
@@ -37,9 +26,7 @@ CREATE TABLE IF NOT EXISTS dbo.ETL_Jobs (
     ModifiedDate    DATETIME2
 );
 
--- -------------------------------------------------------
--- 1b. ETL Execution Log
--- -------------------------------------------------------
+-- ETL Execution Log
 CREATE TABLE dbo.ETL_ExecutionLog (
     LogID           BIGINT IDENTITY(1,1) PRIMARY KEY,
     JobID           INT REFERENCES dbo.ETL_Jobs(JobID),
@@ -61,9 +48,7 @@ CREATE TABLE dbo.ETL_ExecutionLog (
     ExecutedBy      NVARCHAR(128) DEFAULT SUSER_NAME()
 );
 
--- -------------------------------------------------------
--- 1c. Error Staging Table
--- -------------------------------------------------------
+-- Error Staging Table
 CREATE TABLE dbo.ETL_ErrorLog (
     ErrorID         BIGINT IDENTITY(1,1) PRIMARY KEY,
     LogID           BIGINT REFERENCES dbo.ETL_ExecutionLog(LogID),
@@ -78,12 +63,10 @@ CREATE TABLE dbo.ETL_ErrorLog (
 );
 GO
 
--- ============================================================
 -- 2. ETL CONTROL STORED PROCEDURES
--- ============================================================
 
--- 2a. Start ETL Run
-CREATE OR ALTER PROCEDURE dbo.usp_ETL_StartRun
+-- Start ETL Run
+CREATE OR ALTER PROCEDURE usp_ETL_StartRun
     @JobName    NVARCHAR(256),
     @LogID      BIGINT OUTPUT
 AS
@@ -98,8 +81,8 @@ BEGIN
 END;
 GO
 
--- 2b. End ETL Run (success)
-CREATE OR ALTER PROCEDURE dbo.usp_ETL_EndRun
+-- End ETL Run (success)
+CREATE OR ALTER PROCEDURE usp_ETL_EndRun
     @LogID          BIGINT,
     @RowsInserted   BIGINT = 0,
     @RowsUpdated    BIGINT = 0,
@@ -111,22 +94,21 @@ BEGIN
     SET NOCOUNT ON;
 
     UPDATE dbo.ETL_ExecutionLog
-    SET EndTime       = SYSDATETIME(),
-        RowsInserted  = @RowsInserted,
-        RowsUpdated   = @RowsUpdated,
-        RowsDeleted   = @RowsDeleted,
-        RowsRejected  = @RowsRejected,
-        WatermarkNew  = @WatermarkNew,
-        [Status]      = 'SUCCESS'
+    SET EndTime = SYSDATETIME(),
+        RowsInserted = @RowsInserted,
+        RowsUpdated = @RowsUpdated,
+        RowsDeleted = @RowsDeleted,
+        RowsRejected = @RowsRejected,
+        WatermarkNew = @WatermarkNew,
+        [Status] = 'SUCCESS'
     WHERE LogID = @LogID;
 
-    PRINT 'ETL completed. Inserted: ' + CAST(@RowsInserted AS VARCHAR)
-        + ' Updated: ' + CAST(@RowsUpdated AS VARCHAR);
+    PRINT 'ETL completed. Inserted: ' + CAST(@RowsInserted AS VARCHAR) + ' Updated: ' + CAST(@RowsUpdated AS VARCHAR);
 END;
 GO
 
--- 2c. Log ETL Failure
-CREATE OR ALTER PROCEDURE dbo.usp_ETL_LogError
+-- Log ETL Failure
+CREATE OR ALTER PROCEDURE usp_ETL_LogError
     @LogID          BIGINT,
     @ErrorMessage   NVARCHAR(MAX),
     @SourceRow      NVARCHAR(MAX) = NULL
@@ -143,10 +125,8 @@ BEGIN
 END;
 GO
 
--- ============================================================
 -- 3. INCREMENTAL LOAD WITH WATERMARK PATTERN
--- ============================================================
-CREATE OR ALTER PROCEDURE dbo.usp_ETL_IncrementalLoad
+CREATE OR ALTER PROCEDURE usp_ETL_IncrementalLoad
     @SourceDB       NVARCHAR(128),
     @SourceTable    NVARCHAR(256),
     @TargetTable    NVARCHAR(256),
@@ -156,13 +136,11 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @LastWatermark  NVARCHAR(128);
-    DECLARE @NewWatermark   NVARCHAR(128);
-    DECLARE @RowsInserted   BIGINT;
-    DECLARE @RowsUpdated    BIGINT;
-    DECLARE @SQL            NVARCHAR(MAX);
+    DECLARE @LastWatermark NVARCHAR(128);
+    DECLARE @NewWatermark NVARCHAR(128);
+    DECLARE @RowsInserted BIGINT;
+    DECLARE @SQL NVARCHAR(MAX);
 
-    -- Get last successful watermark
     SELECT TOP 1 @LastWatermark = WatermarkNew
     FROM dbo.ETL_ExecutionLog
     WHERE JobName = @SourceTable + '_LOAD'
@@ -173,13 +151,12 @@ BEGIN
 
     PRINT 'Loading changes since: ' + @LastWatermark;
 
-    -- UPSERT (MERGE) pattern
     SET @SQL = '
-    MERGE INTO [' + @TargetTable + '] AS tgt
+    MERGE INTO [' + @TargetTable + '] tgt
     USING (
         SELECT * FROM [' + @SourceDB + ']..' + @SourceTable + '
         WHERE [' + @WatermarkCol + '] > ''' + @LastWatermark + '''
-    ) AS src ON tgt.[ID] = src.[ID]
+    ) src ON tgt.[ID] = src.[ID]
     WHEN MATCHED THEN UPDATE SET tgt.[' + @WatermarkCol + '] = src.[' + @WatermarkCol + ']
     WHEN NOT MATCHED BY TARGET THEN INSERT SELECT src.*;';
 
@@ -188,13 +165,13 @@ BEGIN
         SET @RowsInserted = @@ROWCOUNT;
         SET @NewWatermark = CAST(GETDATE() AS NVARCHAR(128));
 
-        EXEC dbo.usp_ETL_EndRun 
-            @LogID        = @LogID,
+        EXEC usp_ETL_EndRun 
+            @LogID = @LogID,
             @RowsInserted = @RowsInserted,
             @WatermarkNew = @NewWatermark;
     END TRY
     BEGIN CATCH
-        EXEC dbo.usp_ETL_LogError 
+        EXEC usp_ETL_LogError 
             @LogID = @LogID, 
             @ErrorMessage = ERROR_MESSAGE();
         THROW;
@@ -202,42 +179,41 @@ BEGIN
 END;
 GO
 
--- ============================================================
 -- 4. SSIS CATALOG MONITORING QUERIES
--- ============================================================
 USE SSISDB;
 GO
 
--- 4a. Recent SSIS Package Executions
+-- Recent SSIS Package Executions
 SELECT TOP 20
-    e.execution_id                                AS [ExecutionID],
-    e.folder_name                                 AS [Folder],
-    e.project_name                                AS [Project],
-    e.package_name                                AS [Package],
-    e.start_time                                  AS [StartTime],
-    e.end_time                                    AS [EndTime],
-    DATEDIFF(SECOND, e.start_time, e.end_time)    AS [Duration_s],
+    e.execution_id as ExecutionID,
+    e.folder_name as Folder,
+    e.project_name as Project,
+    e.package_name as Package,
+    e.start_time as StartTime,
+    e.end_time as EndTime,
+    DATEDIFF(SECOND, e.start_time, e.end_time) as Duration_s,
     CASE e.status
-        WHEN 1 THEN '▶ Running'
-        WHEN 2 THEN '✓ Success'
-        WHEN 3 THEN '❌ Cancelled'
-        WHEN 4 THEN '⚠ Failed'
-        WHEN 5 THEN '⏸ Pending'
+        WHEN 1 THEN 'Running'
+        WHEN 2 THEN 'Success'
+        WHEN 3 THEN 'Cancelled'
+        WHEN 4 THEN 'Failed'
+        WHEN 5 THEN 'Pending'
         ELSE CAST(e.status AS VARCHAR)
-    END                                           AS [Status],
-    e.executed_as_name                            AS [ExecutedBy]
-FROM catalog.executions AS e
+    END as Status,
+    e.executed_as_name as ExecutedBy
+FROM catalog.executions e
 ORDER BY e.start_time DESC;
 GO
 
--- 4b. Failed SSIS Package Messages
+-- Failed SSIS Package Messages
 SELECT TOP 50
-    om.operation_id                               AS [ExecutionID],
-    om.message_time                               AS [Time],
-    om.package_name                               AS [Package],
-    om.task_name                                  AS [Task],
-    om.message                                    AS [ErrorMessage]
-FROM catalog.operation_messages AS om
-WHERE om.message_type = 120                       -- Error messages
+    om.operation_id as ExecutionID,
+    om.message_time as Time,
+    om.package_name as Package,
+    om.task_name as Task,
+    om.message as ErrorMessage
+FROM catalog.operation_messages om
+WHERE om.message_type = 120
 ORDER BY om.message_time DESC;
 GO
+```
