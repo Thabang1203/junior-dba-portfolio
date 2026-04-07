@@ -1,8 +1,3 @@
--- Script: 01_health_monitoring.sql
--- Author: Norman Mathe
--- Purpose: SQL Server health dashboard - CPU, memory, I/O, blocking, wait stats
--- Environment: SQL Server 2016+
-
 USE master;
 GO
 
